@@ -11,6 +11,8 @@
   import { page } from '$app/stores';
   import ConvexClientProvider from '$lib/components/ConvexClientProvider.svelte';
   import { LayoutDashboard, Receipt, User, Sparkles, LogOut } from 'lucide-svelte';
+  import logo from '$lib/assets/logo.svg';
+
   
   let showNamePopup = false;
   let showUserIdPopup = false;
@@ -83,7 +85,7 @@
   <div class="relative">
     <div class="absolute  inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity"></div>
     <div class="relative w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/25 overflow-hidden bg-transparent">
-      <img src="/src/lib/assets/logo.svg" alt="Expensy logo" class="w-10 h-10 object-contain" />
+      <img src={logo} alt="Expensy logo" class="w-10 h-10 object-contain" />
     </div>
   </div>
 </a>
