@@ -1,0 +1,59 @@
+# Dependencies
+node_modules
+/.pnp
+.pnp.js
+
+# Build Output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
+/package
+/dist
+/.vite
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Convex
+.convex/
+convex/_generated/
+
+# Editor directories
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
