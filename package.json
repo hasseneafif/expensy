@@ -31,5 +31,8 @@
     "lucide-svelte": "^0.546.0",
     "path": "^0.12.7"
   },
-  "type": "module"
+  "type": "module",
+  "engines": {
+    "node": "20.x"
+  }
 }
