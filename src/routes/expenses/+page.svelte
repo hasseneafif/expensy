@@ -4,8 +4,25 @@
   import { api } from '../../../convex/_generated/api';
   import ExpenseForm from '$lib/components/ExpenseForm.svelte';
   import ExpenseList from '$lib/components/ExpenseList.svelte';
+  import ExpenseFilters from '$lib/components/ExpenseFilters.svelte';
   import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   import { Plus, X, DollarSign } from 'lucide-svelte';
+  
+  function formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount);
+  }
+  
+  let activeFilters = {
+    search: '',
+    category: 'all',
+    dateRange: 'all',
+    amountRange: 'all',
+    groupBy: 'date',
+    sortOrder: 'desc'
+  };
   
   let userId = '';
   let showAddForm = false;
@@ -14,12 +31,26 @@
     userId = localStorage.getItem('expensyUserId') || '';
   });
   
+  interface Expense {
+    _id: string;
+    userId: string;
+    amount: number;
+    category: string;
+    description?: string;
+    date: string;
+  }
+
   $: expenses = useQuery(api.expenses.getExpenses, userId ? { userId } : 'skip' as any);
   
   const addExpense = useMutation(api.expenses.addExpense);
   const deleteExpense = useMutation(api.expenses.deleteExpense);
   
-  async function handleAddExpense(event: CustomEvent) {
+  async function handleAddExpense(event: CustomEvent<{
+    amount: string;
+    category: string;
+    description?: string;
+    date: string;
+  }>) {
     const { amount, category, description, date } = event.detail;
     
     try {
@@ -49,6 +80,52 @@
       }
     }
   }
+  
+  function handleFilter(event: CustomEvent) {
+    activeFilters = event.detail;
+  }
+  
+  $: filteredExpenses = $expenses ? $expenses.filter((expense: Expense) => {
+    if (activeFilters.search && !expense.description?.toLowerCase().includes(activeFilters.search.toLowerCase()) &&
+        !expense.category.toLowerCase().includes(activeFilters.search.toLowerCase())) {
+      return false;
+    }
+    
+    if (activeFilters.category !== 'all' && expense.category !== activeFilters.category) {
+      return false;
+    }
+    
+    const expenseDate = new Date(expense.date);
+    const today = new Date();
+    const thisWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay());
+    const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const thisYear = new Date(today.getFullYear(), 0, 1);
+    
+    if (activeFilters.dateRange === 'today' && expenseDate.toDateString() !== today.toDateString()) {
+      return false;
+    }
+    if (activeFilters.dateRange === 'week' && expenseDate < thisWeek) {
+      return false;
+    }
+    if (activeFilters.dateRange === 'month' && expenseDate < thisMonth) {
+      return false;
+    }
+    if (activeFilters.dateRange === 'year' && expenseDate < thisYear) {
+      return false;
+    }
+    
+    if (activeFilters.amountRange !== 'all') {
+      const [min, max] = activeFilters.amountRange.split('-').map(n => n === '+' ? Infinity : Number(n));
+      if (expense.amount < min || (max !== Infinity && expense.amount >= max)) {
+        return false;
+      }
+    }
+    
+    return true;
+  }).sort((a: Expense, b: Expense) => {
+    const sortMultiplier = activeFilters.sortOrder === 'desc' ? -1 : 1;
+    return (new Date(b.date).getTime() - new Date(a.date).getTime()) * sortMultiplier;
+  }) : [];
 </script>
 
 <div class="space-y-6 animate-fade-in">
@@ -89,7 +166,48 @@
       <LoadingSpinner size="w-12 h-12" />
     </div>
   {:else if $expenses.length > 0}
-    <ExpenseList expenses={$expenses} on:delete={handleDeleteExpense} />
+    <div class="space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="glass-card bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border-cyan-500/20">
+          <h3 class="text-sm font-medium text-slate-400 mb-1">Total Spent</h3>
+          <p class="text-2xl font-bold text-white">
+            {formatCurrency($expenses.reduce((sum: number, e: Expense) => sum + e.amount, 0))}
+          </p>
+        </div>
+        <div class="glass-card bg-gradient-to-br from-purple-500/10 to-pink-500/5 border-purple-500/20">
+          <h3 class="text-sm font-medium text-slate-400 mb-1">This Month</h3>
+          <p class="text-2xl font-bold text-white">
+            {formatCurrency($expenses.filter((e: Expense) => new Date(e.date).getMonth() === new Date().getMonth())
+              .reduce((sum: number, e: Expense) => sum + e.amount, 0))}
+          </p>
+        </div>
+        <div class="glass-card bg-gradient-to-br from-emerald-500/10 to-green-500/5 border-emerald-500/20">
+          <h3 class="text-sm font-medium text-slate-400 mb-1">Average per Day</h3>
+          <p class="text-2xl font-bold text-white">
+            {formatCurrency($expenses.reduce((sum: number, e: Expense) => sum + e.amount, 0) / 30)}
+          </p>
+        </div>
+        <div class="glass-card bg-gradient-to-br from-orange-500/10 to-amber-500/5 border-orange-500/20">
+          <h3 class="text-sm font-medium text-slate-400 mb-1">Most Spent On</h3>
+          <p class="text-2xl font-bold text-white">
+            {Object.entries($expenses.reduce((acc: Record<string, number>, e: Expense) => 
+              ({...acc, [e.category]: (acc[e.category] || 0) + e.amount}), {}))
+              .sort(([,a], [,b]) => (b as number) - (a as number))[0][0]}
+          </p>
+        </div>
+      </div>
+      
+      <ExpenseFilters
+        categories={Array.from(new Set($expenses.map((e: Expense) => e.category)))}
+        on:filter={handleFilter}
+      />
+      
+      <ExpenseList
+        expenses={filteredExpenses}
+        groupBy={activeFilters.groupBy}
+        on:delete={handleDeleteExpense}
+      />
+    </div>
   {:else if !showAddForm}
     <div class="glass-card text-center py-16">
       <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 flex items-center justify-center mx-auto mb-6">

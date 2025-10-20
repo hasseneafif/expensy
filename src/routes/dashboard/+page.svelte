@@ -124,7 +124,7 @@
         <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 border border-violet-500/30 flex items-center justify-center">
           <Sparkles class="w-5 h-5 text-violet-400" />
         </div>
-        <h2 class="text-2xl font-bold text-white">AI Insights</h2>
+        <h2 class="text-2xl font-bold text-white">Data Analytics</h2>
       </div>
       <div class="grid grid-cols-1 gap-3">
         {#each $insights as insight}
@@ -140,16 +140,17 @@
       <CategoryChart data={$categoryData} />
     </div>
   {:else}
-    <div class="glass-card text-center py-16">
-      <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 flex items-center justify-center mx-auto mb-6">
-        <TrendingUp class="w-10 h-10 text-slate-500" />
+    <div class="glass-card text-center py-16 animate-slide-up transform transition-all duration-500 hover:scale-[1.02]">
+      <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 flex items-center justify-center mx-auto mb-6 animate-float relative overflow-hidden group">
+        <div class="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white/5 to-transparent"></div>
+        <TrendingUp class="w-10 h-10 text-slate-500 group-hover:text-slate-300 transition-colors duration-300" />
       </div>
-      <h3 class="text-2xl font-bold text-white mb-3">No Data Yet</h3>
-      <p class="text-slate-400 mb-8 max-w-md mx-auto">
+      <h3 class="text-2xl font-bold text-white mb-3 animate-slide-up opacity-0" style="animation-delay: 200ms; animation-fill-mode: forwards;">No Data Yet</h3>
+      <p class="text-slate-400 mb-8 max-w-md mx-auto animate-slide-up opacity-0" style="animation-delay: 400ms; animation-fill-mode: forwards;">
         Start tracking your expenses to unlock powerful insights and analytics
       </p>
-      <a href="/expenses" class="btn-primary inline-flex items-center gap-2">
-        <DollarSign class="w-4 h-4" />
+      <a href="/expenses" class="btn-primary inline-flex items-center gap-2 animate-slide-up opacity-0 hover:scale-105 hover:brightness-110 transition-all duration-300" style="animation-delay: 600ms; animation-fill-mode: forwards;">
+        <DollarSign class="w-4 h-4 animate-bounce-gentle" />
         Add Your First Expense
       </a>
     </div>
@@ -158,10 +159,10 @@
 </div>
 
 <style>
-  @keyframes fade-in {
+  @keyframes slide-up {
     from {
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(30px);
     }
     to {
       opacity: 1;
@@ -169,8 +170,8 @@
     }
   }
   
-  .animate-fade-in {
-    animation: fade-in 0.5s ease-out;
+  .animate-slide-up {
+    animation: slide-up 0.8s cubic-bezier(0.16, 1, 0.3, 1);
   }
   
   @keyframes pulse-glow {
@@ -184,5 +185,44 @@
   
   .animate-pulse-glow {
     animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0) scale(1);
+    }
+    50% {
+      transform: translateY(-15px) scale(1.05);
+    }
+  }
+
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(200%);
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  @keyframes bounce-gentle {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-3px);
+    }
+  }
+
+  .animate-bounce-gentle {
+    animation: bounce-gentle 1.5s ease-in-out infinite;
   }
 </style>
