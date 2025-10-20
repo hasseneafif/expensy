@@ -10,20 +10,26 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import ConvexClientProvider from '$lib/components/ConvexClientProvider.svelte';
-  import { LayoutDashboard, Receipt, User, Sparkles, LogOut } from 'lucide-svelte';
+  import { LayoutDashboard, Receipt, User, Sparkles, LogOut, ArrowLeft } from 'lucide-svelte';
   import logo from '$lib/assets/logo.svg';
 
   
   let showNamePopup = false;
   let showUserIdPopup = false;
   let showImportAccount = false;
+  let showMobileMenu = false;
   let userName = '';
   let userId = '';
   let importUserId = '';
   let importUserIdError = '';
 
-  function handleLogout() {
+  function handleGoBack() {
     localStorage.setItem('expensyForceHero', 'true');
+    goto('/');
+  }
+
+  function handleLogout() {
+    localStorage.clear();
     goto('/');
   }
   
@@ -67,7 +73,10 @@
     localStorage.setItem('expensyUserId', importUserId);
     userId = importUserId;
     showNamePopup = false;
+    showUserIdPopup = false;
+    showImportAccount = false;
     importUserIdError = '';
+    window.location.href = '/dashboard';  // Force a full page reload to fetch new data
   }
 
   function copyUserId() {
@@ -77,20 +86,23 @@
 
 <ConvexClientProvider>
   <div class="min-h-screen bg-black">
-    <div class="fixed top-0 left-0 right-0 z-40 px-4 sm:px-6 lg:px-8 pt-4">
-      <nav class="floating-nav max-w-7xl mx-auto">
-        <div class="px-4 sm:px-6">
+    <header class="fixed top-0 left-0 right-0 z-40 px-4 sm:px-6 lg:px-8 pt-4">
+      <div class="floating-nav max-w-7xl mx-auto">
+        <nav class="px-4 sm:px-6">
           <div class="flex items-center justify-between p-0 md:p-3">
-<a href="/" class="flex items-center space-x-3 group hidden md:block">
-  <div class="relative">
-    <div class="absolute  inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity"></div>
-    <div class="relative w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/25 overflow-hidden bg-transparent">
-      <img src={logo} alt="Expensy logo" class="w-10 h-10 object-contain" />
-    </div>
-  </div>
-</a>
+            <button 
+              on:click={handleGoBack} 
+              class="flex items-center space-x-3 group hidden md:block"
+              title="Go Back"
+            >
+              <div class="relative">
+                <div class="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity"></div>
+                <div class="relative w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/25 overflow-hidden bg-transparent">
+                  <img src={logo} alt="Expensy logo" class="w-10 h-10 object-contain" />
+                </div>
+              </div>
+            </button>
 
-            
             <div class="hidden md:flex items-center space-x-2">
               <a 
                 href="/dashboard" 
@@ -132,34 +144,101 @@
             </div>
           </div>
           
-          <div class="md:hidden flex gap-2 pb-3 pt-2">
-            <a 
-              href="/dashboard" 
-              class="nav-link-mobile {$page.url.pathname.startsWith('/dashboard') ? 'nav-link-mobile-active' : ''}"
+          <div class="md:hidden flex items-center justify-between pb-3 pt-2">
+            <div class="flex gap-2 flex-1">
+              <a 
+                href="/dashboard" 
+                class="nav-link-mobile {$page.url.pathname.startsWith('/dashboard') ? 'nav-link-mobile-active' : ''}"
+              >
+                <LayoutDashboard class="w-4 h-4" />
+                Dashboard
+              </a>
+            </div>
+
+            <button 
+              on:click={() => showMobileMenu = true} 
+              class="flex items-center space-x-3 group"
+              title="Menu"
             >
-              <LayoutDashboard class="w-4 h-4" />
-              Dashboard
-            </a>
-            <a 
-              href="/expenses" 
-              class="nav-link-mobile {$page.url.pathname.startsWith('/expenses') ? 'nav-link-mobile-active' : ''}"
+              <div class="relative">
+                <div class="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity"></div>
+                <div class="relative w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/25 overflow-hidden bg-transparent">
+                  <img src={logo} alt="Expensy logo" class="w-10 h-10 object-contain" />
+                </div>
+              </div>
+            </button>
+
+            <div class="flex gap-2 flex-1 justify-end">
+              <a 
+                href="/expenses" 
+                class="nav-link-mobile {$page.url.pathname.startsWith('/expenses') ? 'nav-link-mobile-active' : ''}"
+              >
+                <Receipt class="w-4 h-4" />
+                Expenses
+              </a>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    {#if showMobileMenu}
+      <div class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in" 
+        on:click={() => showMobileMenu = false}
+        role="dialog"
+        tabindex="-1"
+        on:keydown={(e) => e.key === 'Escape' && (showMobileMenu = false)}
+      >
+        <div class="glass-card w-full max-w-[min(90vw,20rem)] my-4 shadow-2xl shadow-cyan-500/10 animate-scale-in p-4" 
+          role="menu"
+        >
+          <div class="flex flex-col gap-3">
+            <button 
+              on:click={() => {
+                showUserIdPopup = true;
+                showMobileMenu = false;
+              }}
+              class="flex items-center gap-2 p-3 rounded-xl bg-slate-800/30 hover:bg-slate-800/50 transition-all"
             >
-              <Receipt class="w-4 h-4" />
-              Expenses
-            </a>
+              <User class="w-5 h-5 text-slate-400" />
+              <span class="text-slate-300">Profile</span>
+            </button>
+            
+            {#if $page.url.pathname !== '/'}
+              <button 
+                on:click={() => {
+                  handleLogout();
+                  showMobileMenu = false;
+                }}
+                class="flex items-center gap-2 p-3 rounded-xl bg-slate-800/30 hover:bg-slate-800/50 transition-all"
+              >
+                <LogOut class="w-5 h-5 text-slate-400" />
+                <span class="text-slate-300">Logout</span>
+              </button>
+            {/if}
           </div>
         </div>
-      </nav>
-    </div>
-    
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 md:pt-24 pb-8">
+      </div>
+    {/if}    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 md:pt-24 pb-8">
       <slot />
     </main>
   </div>
 
   {#if showUserIdPopup}
-    <div class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in" on:click={() => showUserIdPopup = false}>
-      <div class="glass-card w-full max-w-[min(90vw,24rem)] my-4 shadow-2xl shadow-cyan-500/10 animate-scale-in" on:click|stopPropagation>
+    <div class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in" 
+      on:click|self={() => {
+        if (!showImportAccount) {
+          showUserIdPopup = false;
+        }
+      }}
+      role="dialog"
+      tabindex="-1"
+      on:keydown={(e) => e.key === 'Escape' && !showImportAccount && (showUserIdPopup = false)}
+    >
+      <div 
+        class="glass-card w-full max-w-[min(90vw,24rem)] my-4 shadow-2xl shadow-cyan-500/10 animate-scale-in" 
+        role="document"
+      >
         <div class="text-center mb-6">
           <h2 class="text-2xl font-bold text-white mb-3">Your Account ID</h2>
           <p class="text-slate-400 text-sm mb-4">You can use this ID to log in from other devices and see your expense history</p>
@@ -172,6 +251,55 @@
               Copy
             </button>
           </div>
+          
+          {#if !showImportAccount}
+            <button
+              on:click={() => showImportAccount = true}
+              class="text-sm text-slate-400 hover:text-slate-300 transition-colors mt-6"
+            >
+              Want to use another account?
+            </button>
+          {:else}
+            <div class="mt-6 space-y-4 animate-scale-in">
+              <div>
+                <label for="importUserId" class="block text-sm font-medium text-slate-300 mb-2">
+                  Enter Account ID
+                </label>
+                <input
+                  id="importUserId"
+                  type="text"
+                  bind:value={importUserId}
+                  on:keypress={handleKeyPress}
+                  placeholder="e.g., user_1234567890_abc123def"
+                  class="input-field w-full text-base"
+                />
+                {#if importUserIdError}
+                  <p class="text-red-400 text-sm mt-1">{importUserIdError}</p>
+                {/if}
+              </div>
+              
+              <div class="flex flex-col gap-2">
+                <button
+                  on:click={handleImportAccount}
+                  disabled={!importUserId.trim()}
+                  class="btn-primary w-full py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Import Account
+                </button>
+                
+                <button
+                  on:click={() => {
+                    showImportAccount = false;
+                    importUserIdError = '';
+                    importUserId = '';
+                  }}
+                  class="text-sm text-slate-400 hover:text-slate-300 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          {/if}
         </div>
       </div>
     </div>
@@ -204,7 +332,6 @@
                 on:keypress={handleKeyPress}
                 placeholder="Enter your name"
                 class="input-field w-full text-base"
-                autofocus
               />
             </div>
             
@@ -236,7 +363,6 @@
                 on:keypress={handleKeyPress}
                 placeholder="e.g., user_1234567890_abc123def"
                 class="input-field w-full text-base"
-                autofocus
               />
               {#if importUserIdError}
                 <p class="text-red-400 text-sm mt-1">{importUserIdError}</p>
@@ -274,17 +400,19 @@
     background: #000000;
   }
   
-  .floating-nav {
-    @apply bg-slate-900/20 backdrop-blur-2xl;
-    @apply border border-slate-700/30 rounded-2xl;
-    @apply shadow-2xl shadow-black/20;
+    .floating-nav {
+    background: rgba(15, 23, 42, 0.2);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(51, 65, 85, 0.3);
+    border-radius: 16px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     background-image: 
       radial-gradient(at 50% 0%, rgba(6, 182, 212, 0.05) 0px, transparent 50%),
       radial-gradient(at 100% 50%, rgba(139, 92, 246, 0.05) 0px, transparent 50%);
   }
   
   .floating-nav:hover {
-    @apply border-slate-600/40;
+    border-color: rgba(71, 85, 105, 0.4);
     box-shadow: 
       0 0 0 1px rgba(148, 163, 184, 0.05),
       0 20px 40px -12px rgba(0, 0, 0, 0.5),
